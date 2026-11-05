@@ -2,7 +2,14 @@
 
 import { PauseIcon, PlayIcon, SquareIcon, TimerIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { iniciarSessaoEstudo, salvarSessaoEstudo } from "@/lib/actions";
 import {
@@ -127,6 +134,37 @@ export function Cronometro({
     setPendente(false);
     router.refresh(); // atualiza o total vindo do banco
   }
+
+  // Atalho: Espaço pausa / continua o relógio
+  const ehEspaco = (e: KeyboardEvent) =>
+    e.code === "Space" &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    !e.altKey &&
+    !e.shiftKey &&
+    !(e.target as HTMLElement | null)?.closest(
+      "input, textarea, select, [contenteditable=true], [role=menu], [role=dialog]",
+    );
+
+  const aoTeclar = useEffectEvent((e: KeyboardEvent) => {
+    if (e.defaultPrevented || !ehEspaco(e)) return;
+    // Evita rolar a página e acionar o botão que estiver focado
+    e.preventDefault();
+    if (e.repeat || pendente) return;
+    if (rodando) pausar();
+    else iniciar();
+  });
+
+  useEffect(() => {
+    // Alguns navegadores acionam o botão focado no keyup do Espaço
+    const aoSoltar = (e: KeyboardEvent) => ehEspaco(e) && e.preventDefault();
+    window.addEventListener("keydown", aoTeclar);
+    window.addEventListener("keyup", aoSoltar);
+    return () => {
+      window.removeEventListener("keydown", aoTeclar);
+      window.removeEventListener("keyup", aoSoltar);
+    };
+  }, []);
 
   const sessaoSeg = Math.floor(
     decorrido(estado, rodando ? Math.max(agora, estado.inicio ?? 0) : 0) / 1000,

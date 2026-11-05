@@ -73,7 +73,14 @@ async function Conteudo({ params }: { params: Promise<{ questaoId: string }> }) 
 
       {/* key: reinicia o estado ao navegar para outra questão */}
       {/* Gabarito e comentários não vão para o cliente: chegam só após responder */}
-      <Responder key={q.id} questaoId={q.id} tipo={q.tipo} opcoes={q.opcoes} />
+      <Responder
+        key={q.id}
+        questaoId={q.id}
+        tipo={q.tipo}
+        opcoes={q.opcoes}
+        anteriorHref={q.anteriorId ? `/questoes/${q.anteriorId}` : undefined}
+        proximaHref={q.proximaId ? `/questoes/${q.proximaId}` : undefined}
+      />
 
       <nav className="mt-8 flex justify-between border-t pt-4">
         {q.anteriorId ? (
