@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "questoes.schema.json",
+  "title": "Importação de questões",
+  "description": "Arquivo para cadastrar questões em lote em um assunto. Todas as questões do arquivo vão para o assunto em que a importação é feita, na ordem em que aparecem.",
+  "type": "object",
+  "required": ["questoes"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Caminho deste schema, para autocompletar e validar no editor."
+    },
+    "questoes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": { "$ref": "#/$defs/questao" }
+    }
+  },
+  "$defs": {
+    "questao": {
+      "type": "object",
+      "required": ["banca", "ano", "enunciado", "tipo", "gabarito"],
+      "additionalProperties": false,
+      "properties": {
+        "banca": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Ex.: Cebraspe, FGV, FCC."
+        },
+        "ano": {
+          "type": "integer",
+          "minimum": 1950,
+          "description": "Ano da prova. Aceito até o ano seguinte ao atual."
+        },
+        "enunciado": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tipo": {
+          "enum": ["multipla_escolha", "certo_errado"]
+        },
+        "alternativas": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Texto das alternativas, na ordem A, B, C, D, E. Só em múltipla escolha."
+        },
+        "gabarito": {
+          "type": "string",
+          "description": "\"C\" (certo) ou \"E\" (errado) em certo/errado; letra da alternativa correta (A–E) em múltipla escolha."
+        },
+        "comentarios": {
+          "type": "string",
+          "description": "Explicação do gabarito, fundamentação, dicas (opcional)."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "tipo": { "const": "certo_errado" } } },
+          "then": {
+            "properties": { "gabarito": { "enum": ["C", "E"] } },
+            "not": { "required": ["alternativas"] }
+          }
+        },
+        {
+          "if": { "properties": { "tipo": { "const": "multipla_escolha" } } },
+          "then": {
+            "required": ["alternativas"],
+            "properties": { "gabarito": { "enum": ["A", "B", "C", "D", "E"] } }
+          }
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "$schema": "./questoes.schema.json",
+      "questoes": [
+        {
+          "banca": "FGV",
+          "ano": 2024,
+          "enunciado": "Qual é a capital do Brasil?",
+          "tipo": "multipla_escolha",
+          "alternativas": ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador"],
+          "gabarito": "C",
+          "comentarios": "Brasília é a capital desde 1960."
+        },
+        {
+          "banca": "Cebraspe",
+          "ano": 2023,
+          "enunciado": "A Constituição Federal de 1988 é classificada como rígida.",
+          "tipo": "certo_errado",
+          "gabarito": "C"
+        }
+      ]
+    }
+  ]
+}
